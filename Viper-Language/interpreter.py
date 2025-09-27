@@ -1,4 +1,3 @@
-# interpreter.py
 from core import say, input_func
 
 class Num:
@@ -107,3 +106,4 @@ class Interpreter:
                 return func(*args)
         if isinstance(node, Return):
             return self.eval(node.value, env)
+
