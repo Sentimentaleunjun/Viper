@@ -34,13 +34,11 @@ class Environment:
         self.vars = {}
         self.parent = parent
         self.modules = {}
-    
     def get(self, name):
         if name in self.vars: return self.vars[name]
         if self.parent: return self.parent.get(name)
         if name in self.modules: return self.modules[name]
         raise Exception(f"{name} not found")
-    
     def set(self, name, value): self.vars[name] = value
 
 class Interpreter:
@@ -106,4 +104,3 @@ class Interpreter:
                 return func(*args)
         if isinstance(node, Return):
             return self.eval(node.value, env)
-
