@@ -1,107 +1,109 @@
-import socket, hashlib, urllib.request, copy
+# interpreter.py
+from core import say, input_func
 
 class Num:
     def __init__(self, value): self.value = value
-    def eval(self, env): return self.value
-
 class Str:
     def __init__(self, value): self.value = value
-    def eval(self, env): return self.value
-
+class Bool:
+    def __init__(self, value): self.value = value
+class Null:
+    def __init__(self): pass
 class Var:
     def __init__(self, name): self.name = name
-    def eval(self, env):
-        if self.name in env: return env[self.name]
-        raise NameError(f"Variable '{self.name}' is not defined")
-
 class Assign:
-    def __init__(self, name, expr): self.name=name; self.expr=expr
-    def eval(self, env):
-        env[self.name] = self.expr.eval(env)
-        return env[self.name]
-
-class Print:
-    def __init__(self, expr): self.expr=expr
-    def eval(self, env):
-        val = self.expr.eval(env)
-        print(val)
-        return val
-
+    def __init__(self, name, value): self.name, self.value = name, value
 class BinOp:
-    def __init__(self, left, op, right): self.left=left; self.op=op; self.right=right
-    def eval(self, env):
-        l = self.left.eval(env)
-        r = self.right.eval(env)
-        if self.op=='+': return l+r
-        if self.op=='-': return l-r
-        if self.op=='*': return l*r
-        if self.op=='/': return l//r
-        if self.op=='<': return l<r
-        if self.op=='>': return l>r
-        if self.op=='==': return l==r
-        raise Exception(f"Unknown operator {self.op}")
-
-class FuncCall:
-    def __init__(self, obj, func, args):
-        self.obj=obj; self.func=func; self.args=args
-    def eval(self, env):
-        if self.obj:
-            obj_instance = env.get(self.obj)
-            if not obj_instance: raise Exception(f"Object '{self.obj}' not found")
-            func_instance = getattr(obj_instance, self.func, None)
-            if not callable(func_instance):
-                raise Exception(f"Function '{self.obj}.{self.func}' not defined")
-        else:
-            func_instance = env.get(self.func)
-            if isinstance(env.get(self.func), UserFunc):
-                return env[self.func].call([a.eval(env) for a in self.args], env)
-            elif callable(func_instance):
-                pass
-            else:
-                raise Exception(f"Function '{self.func}' not defined")
-        arg_vals = [a.eval(env) for a in self.args]
-        return func_instance(*arg_vals)
-
-class While:
-    def __init__(self, cond_expr, body): self.cond_expr=cond_expr; self.body=body
-    def eval(self, env):
-        while self.cond_expr.eval(env):
-            for stmt in self.body: stmt.eval(env)
-
+    def __init__(self, left, op, right): self.left, self.op, self.right = left, op, right
+class UnaryOp:
+    def __init__(self, op, expr): self.op, self.expr = op, expr
+class Print:
+    def __init__(self, expr): self.expr = expr
 class If:
-    def __init__(self, cond_expr, body, else_body=None):
-        self.cond_expr=cond_expr; self.body=body; self.else_body=else_body
-    def eval(self, env):
-        if self.cond_expr.eval(env):
-            for stmt in self.body: stmt.eval(env)
-        elif self.else_body:
-            for stmt in self.else_body: stmt.eval(env)
+    def __init__(self, condition, body, orelse=None): self.condition, self.body, self.orelse = condition, body, orelse
+class While:
+    def __init__(self, condition, body): self.condition, self.body = condition, body
+class FuncDef:
+    def __init__(self, name, params, body): self.name, self.params, self.body = name, params, body
+class FuncCall:
+    def __init__(self, name, args): self.name, self.args = name, args
+class Return:
+    def __init__(self, value): self.value = value
 
-class UserFunc:
-    def __init__(self, args, body): self.args=args; self.body=body
-    def call(self, arg_vals, env):
-        local_env = copy.deepcopy(env)
-        for a,v in zip(self.args,arg_vals): local_env[a]=v
-        for stmt in self.body: stmt.eval(local_env)
-        return None
+class Environment:
+    def __init__(self, parent=None):
+        self.vars = {}
+        self.parent = parent
+        self.modules = {}
+    
+    def get(self, name):
+        if name in self.vars: return self.vars[name]
+        if self.parent: return self.parent.get(name)
+        if name in self.modules: return self.modules[name]
+        raise Exception(f"{name} not found")
+    
+    def set(self, name, value): self.vars[name] = value
 
 class Interpreter:
-    def __init__(self):
-        self.env = {
-            "network": NetworkModule(),
-            "dns": DNSModule(),
-            "security": SecurityModule()
-        }
-    def exec(self, node): return node.eval(self.env)
-
-class NetworkModule:
-    def get_ip(self, host): return socket.gethostbyname(host)
-    def http_get(self, url):
-        with urllib.request.urlopen(url) as resp: return resp.read().decode()
-
-class DNSModule:
-    def lookup(self, domain): return socket.gethostbyname_ex(domain)
-
-class SecurityModule:
-    def sha256(self, msg):
-        return hashlib.sha256(msg.encode()).hexdigest()
+    def eval(self, node, env):
+        if isinstance(node, Num): return node.value
+        if isinstance(node, Str): return node.value
+        if isinstance(node, Bool): return node.value
+        if isinstance(node, Null): return None
+        if isinstance(node, Var): return env.get(node.name)
+        if isinstance(node, Assign):
+            value = self.eval(node.value, env)
+            env.set(node.name, value)
+            return value
+        if isinstance(node, BinOp):
+            left = self.eval(node.left, env)
+            right = self.eval(node.right, env)
+            if node.op == "+": return left + right
+            if node.op == "-": return left - right
+            if node.op == "*": return left * right
+            if node.op == "/": return left / right
+            if node.op == "%": return left % right
+            if node.op == "==": return left == right
+            if node.op == "!=": return left != right
+            if node.op == "<": return left < right
+            if node.op == "<=": return left <= right
+            if node.op == ">": return left > right
+            if node.op == ">=": return left >= right
+            if node.op == "and": return left and right
+            if node.op == "or": return left or right
+        if isinstance(node, UnaryOp):
+            val = self.eval(node.expr, env)
+            if node.op == "-": return -val
+            if node.op == "not": return not val
+        if isinstance(node, Print):
+            val = self.eval(node.expr, env)
+            say(val)
+        if isinstance(node, If):
+            if self.eval(node.condition, env):
+                for n in node.body: self.eval(n, env)
+            elif node.orelse:
+                for n in node.orelse: self.eval(n, env)
+        if isinstance(node, While):
+            while self.eval(node.condition, env):
+                for n in node.body: self.eval(n, env)
+        if isinstance(node, FuncDef):
+            env.set(node.name, node)
+        if isinstance(node, FuncCall):
+            func = env.get(node.name)
+            if isinstance(func, FuncDef):
+                new_env = Environment(env)
+                for name, val in zip(func.params, node.args):
+                    new_env.set(name, self.eval(val, env))
+                result = None
+                for n in func.body:
+                    if isinstance(n, Return):
+                        result = self.eval(n.value, new_env)
+                        break
+                    else:
+                        self.eval(n, new_env)
+                return result
+            elif callable(func):
+                args = [self.eval(a, env) for a in node.args]
+                return func(*args)
+        if isinstance(node, Return):
+            return self.eval(node.value, env)
