@@ -25,4 +25,4 @@ Viper-Lite는 **C 스타일의 문법**과 **파이썬처럼 쉬운 사용성**�
 1. 프로젝트 폴더로 이동:
 
 ```powershell
-cd C:\Users\<사용자명>\Desktop\Viper-Language
+cd C:\Users\<sentimentaleunjun>\Desktop\Viper-Language
