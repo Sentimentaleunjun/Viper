@@ -1,3 +1,0 @@
-give pi() { return 3.1415926535; }
-give square(x) { return x * x; }
-give add(a,b) { return a + b; }
