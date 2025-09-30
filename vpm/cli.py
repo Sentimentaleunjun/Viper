@@ -1,15 +1,19 @@
 import sys
-from .registry import install_package
+from . import registry, utils
 
 def main():
-    if len(sys.argv) < 3:
-        print("Usage: vpm install <package>")
+    if len(sys.argv) < 2:
+        print("Usage: vpm [install|remove|list] <package>")
         return
-    command, package = sys.argv[1], sys.argv[2]
-    if command == "install":
-        install_package(package)
-    else:
-        print(f"Unknown command: {command}")
 
-if __name__ == "__main__":
-    main()
+    cmd = sys.argv[1]
+    if cmd == "install":
+        pkg = sys.argv[2]
+        registry.install(pkg)
+    elif cmd == "remove":
+        pkg = sys.argv[2]
+        registry.remove(pkg)
+    elif cmd == "list":
+        registry.list_packages()
+    else:
+        print("Unknown command:", cmd)
