@@ -1,0 +1,3 @@
+func square(x: NUMBER) {
+    return x * x;
+}
