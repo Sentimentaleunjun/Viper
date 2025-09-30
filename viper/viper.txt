@@ -1,0 +1,39 @@
+import sys, traceback, importlib, pkgutil
+from viper.parser import Lexer, Parser
+from viper.interpreter import Interpreter, Environment
+from viper import core
+
+def load_modules(env):
+    import modules
+    for _, name, _ in pkgutil.iter_modules(modules.__path__):
+        env.modules[name] = importlib.import_module(f"modules.{name}")
+    env.modules.update({"say": core.say, "input": core.input_func})
+
+def run_file(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            code = f.read()
+        tokens = Lexer(code).tokenize()
+        ast = Parser(tokens).parse()
+        env = Environment(); load_modules(env)
+        for n in ast: Interpreter().eval(n, env)
+    except Exception as e:
+        print(f"[RuntimeError] {path}: {str(e)}")
+        traceback.print_exc()
+
+def repl():
+    env = Environment(); load_modules(env)
+    while True:
+        try:
+            text = input("Viper> ")
+            tokens = Lexer(text).tokenize()
+            ast = Parser(tokens).parse()
+            for n in ast: Interpreter().eval(n, env)
+        except KeyboardInterrupt:
+            print("\nBye"); break
+        except Exception as e:
+            print("Error:", e)
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1: run_file(sys.argv[1])
+    else: repl()
