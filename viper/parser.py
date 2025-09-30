@@ -8,7 +8,6 @@ class ASTNode:
         return f"ASTNode({self.node_type}, {self.value}, {self.children})"
 
 def parse(tokens):
-    # 아주 간단한 예시 파서 (expr → NUMBER | STRING)
     ast = []
     for ttype, val in tokens:
         if ttype in ("NUMBER", "STRING", "IDENT"):
