@@ -9,3 +9,7 @@ def eval_ast(ast):
         elif node.node_type == "IDENT":
             if node.value == "net":
                 core.say("Network module loaded")
+            elif node.value == "dns":
+                core.say("DNS module loaded")
+            elif node.value == "security":
+                core.say("Security module loaded")
