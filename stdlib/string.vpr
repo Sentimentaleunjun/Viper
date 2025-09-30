@@ -1,0 +1,3 @@
+func strlen(s: STRING) {
+    return len(s);
+}
