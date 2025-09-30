@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=42","wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "viperlang"
+version = "1.0.0"
+description = "Viper Programming Language Interpreter"
+authors = [{name="GSEJ Company"}]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+
+[project.scripts]
+viper = "viper.__main__:main"
+vpm = "vpm.cli:main"
