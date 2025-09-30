@@ -1,0 +1,3 @@
+import network as net;
+let ip = net.get_ip("example.com");
+say ip;
